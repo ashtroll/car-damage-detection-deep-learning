@@ -51,9 +51,9 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Oleksy1121/Car-damage-detection"
-Repository = "https://github.com/Oleksy1121/Car-damage-detection"
-Issues = "https://github.com/Oleksy1121/Car-damage-detection/issues"
+Homepage = "https://github.com/ashtroll/car-damage-detection-deep-learning"
+Repository = "https://github.com/ashtroll/car-damage-detection-deep-learning"
+Issues = "https://github.com/ashtroll/car-damage-detection-deep-learning/issues"
 
 [tool.setuptools]
 packages = ["damage_detection_app"]

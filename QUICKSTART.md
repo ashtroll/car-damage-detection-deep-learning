@@ -13,8 +13,8 @@ This guide will help you get the Car Damage Detection system up and running in m
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Oleksy1121/Car-damage-detection.git
-   cd Car-damage-detection
+   git clone https://github.com/ashtroll/car-damage-detection-deep-learning.git
+   cd car-damage-detection-deep-learning
    ```
 
 2. **Create virtual environment**
@@ -85,5 +85,5 @@ yolo task=detect mode=train model=yolov8s.pt data=path/to/data.yaml epochs=100 i
 - Explore training notebooks in `training/`
 
 ## Support
-- 📫 Open an [issue](https://github.com/Oleksy1121/Car-damage-detection/issues)
-- 💬 Start a [discussion](https://github.com/Oleksy1121/Car-damage-detection/discussions)
+- 📫 Open an [issue](https://github.com/ashtroll/car-damage-detection-deep-learning/issues)
+- 💬 Start a [discussion](https://github.com/ashtroll/car-damage-detection-deep-learning/discussions)

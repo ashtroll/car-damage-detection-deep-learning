@@ -22,8 +22,8 @@ Thank you for considering contributing to this project! 🚗
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Car-damage-detection.git
-   cd Car-damage-detection
+   git clone https://github.com/YOUR_USERNAME/car-damage-detection-deep-learning.git
+   cd car-damage-detection-deep-learning
    ```
 
 2. **Create a feature branch**
@@ -80,8 +80,8 @@ Thank you for considering contributing to this project! 🚗
 - 🌐 **Web Interface**: Create a web version with FastAPI
 - 📦 **Deployment**: Docker containerization, cloud deployment guides
 
-## Questions?
-
-Feel free to open an issue for any questions or join discussions!
+## Support
+- 📫 Open an [issue](https://github.com/ashtroll/car-damage-detection-deep-learning/issues)
+- 💬 Start a [discussion](https://github.com/ashtroll/car-damage-detection-deep-learning/discussions)
 
 Thank you for helping improve this project! 🙏

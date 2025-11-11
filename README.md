@@ -103,6 +103,15 @@ Dataset source & details: [Roboflow Project Link](https://universe.roboflow.com/
 
 ## 4. Model Training & Evaluation
 
+**Our Training Configuration:**
+- **Model**: YOLOv8s (small variant for 4GB VRAM)
+- **Batch Size**: 16
+- **Epochs**: 100 (early stopping at best mAP)
+- **Image Size**: 640x640
+- **Workers**: 2
+- **Device**: NVIDIA RTX 3050 (4GB)
+- **Training Time**: ~6-7 hours total
+
 ### 4.1 YOLOv8 Experiments
 Batch sizes explored: `-1 (auto)`, 8, 16, 32 across augmented vs non‑augmented data using `yolov8m` pretrained weights.
 
@@ -184,8 +193,8 @@ Errors (missing model, unreadable image) are appended to the log panel and stack
 
 ### 6.1 Clone Repository
 ```bash
-git clone https://github.com/Oleksy1121/Car-Damage-Detection.git
-cd Car-Damage-Detection/damage_detection_app
+git clone https://github.com/ashtroll/car-damage-detection-deep-learning.git
+cd car-damage-detection-deep-learning/damage_detection_app
 ```
 
 ### 6.2 (Optional) Create Virtual Environment – Windows (cmd)
@@ -200,10 +209,11 @@ pip install -r requirements.txt
 ```
 
 ### 6.4 Place Model Weights
-Create `model/` inside `damage_detection_app/` and copy your trained YOLO weights (e.g. `best.pt`).
+Download the trained model from [Releases](https://github.com/ashtroll/car-damage-detection-deep-learning/releases) and place it in the model directory:
 ```cmd
 mkdir model
-copy path\to\your\best.pt model\best.pt
+# Download best.pt from GitHub Releases, then:
+copy path\to\downloaded\best.pt model\best.pt
 ```
 
 ### 6.5 Run GUI

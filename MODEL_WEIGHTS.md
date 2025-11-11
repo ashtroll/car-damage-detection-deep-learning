@@ -4,9 +4,8 @@ Due to GitHub file size limitations, trained model weights are not included in t
 
 ## Option 1: Download Pre-trained Weights (Recommended)
 
-If pre-trained weights are available, download them from:
-- [Releases page](https://github.com/Oleksy1121/Car-damage-detection/releases)
-- Google Drive / Dropbox link (if provided)
+Download the trained model weights from our GitHub Releases:
+- [Download best.pt from Releases](https://github.com/ashtroll/car-damage-detection-deep-learning/releases)
 
 Place the `best.pt` file in: `damage_detection_app/model/best.pt`
 
@@ -45,4 +44,4 @@ You can use any YOLOv8-compatible model:
 
 ## Need Help?
 
-Open an [issue](https://github.com/Oleksy1121/Car-damage-detection/issues) if you need assistance obtaining or training a model.
+Open an [issue](https://github.com/ashtroll/car-damage-detection-deep-learning/issues) if you need assistance obtaining or training a model.
