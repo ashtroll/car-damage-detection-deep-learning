@@ -27,3 +27,14 @@ It is recommended to open the application's folder as a project in a development
 3. **Run the Application**: Execute the following command to launch the application:
    ```bash
    python app.py
+   ```
+
+## Notes
+- Place your trained YOLO weights at `damage_detection_app/model/best.pt` (create the `model/` folder if missing). You can export this from the `training/YOLOv8.ipynb` notebook.
+- On Windows PowerShell, commands look like:
+  ```powershell
+  python -m venv .venv
+  .\.venv\Scripts\Activate.ps1
+  pip install -r requirements.txt
+  python app.py
+  ```

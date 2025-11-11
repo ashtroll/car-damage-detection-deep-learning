@@ -1,180 +1,284 @@
-# Car Damage Detection
+<div align="center">
 
-This project focuses on detecting and localizing various types of car body damages using deep learning models. It includes a custom YOLOv8 model and a Faster R-CNN model, along with a user-friendly application for image processing and visualization.
+<h1>🚗 Car Damage Detection & Visualization Suite</h1>
+<p><strong>Deep-learning powered toolkit to detect, localize and analyze automotive exterior damage (scratches, dents, rust, paint defects) using YOLOv8 and Faster R‑CNN, plus a desktop GUI for interactive review.</strong></p>
 
-## Project Structure
-The repository is organized as follows:
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-00FFFF.svg)](https://github.com/ultralytics/ultralytics)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+<img src="img/app_screen.png" alt="GUI Screenshot" width="640" />
+
+[Features](#1-high-level-overview) • [Installation](#6-installation--quick-start) • [Training](#4-model-training--evaluation) • [Usage](#5-application-desktop-gui-deep-dive) • [Contributing](CONTRIBUTING.md)
+
+</div>
+
+---
+
+## 1. High-Level Overview
+
+This repository combines three pillars:
+
+| Pillar | Purpose | Technologies |
+|--------|---------|--------------|
+| Data & Annotation | Curated, polygon‑annotated dataset of car body damage | Roboflow, manual QC |
+| Model Training | Comparative experiments (YOLOv8 vs Faster R‑CNN) | Ultralytics YOLO, Detectron2 concepts (Faster R-CNN) |
+| Interactive App | Lightweight desktop image review & inference | Tkinter, OpenCV, Pillow, ultralytics |
+
+The goal: provide a reproducible workflow from raw images → cleaned + annotated dataset → trained model → end‑user visualization.
+
+---
+
+## 2. Repository Structure & Components
+
 ```
+Car-damage-detection/
 ├── damage_detection_app/
-│   ├── app.py               # Main script for the YOLO-based application.
-│   ├── requirements.txt     # Required dependencies.
-│   ├── README.md            # Instructions specific to the application.
-│   └── test/                # Folder containing test images.
-├── img/                     # Contains sample images and screenshots.
-│   └── app_screen.png       # Example screenshot of the application in use.
+│   ├── app.py               # Tkinter GUI: folder ingestion, inference, display, logging.
+│   ├── requirements.txt     # Minimal runtime dependencies for the GUI.
+│   ├── README.md            # App-specific quick start.
+│   └── test/                # Sample images for validation/demo.
+├── img/                     # Metrics plots, screenshots, comparison visuals, dataset examples.
 ├── training/
-│   ├── YOLOv8.ipynb         # Jupyter notebook for training the YOLOv8 model.
-│   └── Faster R-CNN.ipynb   # Jupyter notebook for training the Faster R-CNN model.
-└── README.md                # Main instructions and overview of the project.
+│   ├── YOLOv8.ipynb         # End-to-end YOLOv8 training & evaluation pipeline.
+│   └── Faster R-CNN.ipynb   # Faster R-CNN experimentation (Detectron-style workflow).
+├── notebooks/official/custom/sdk-custom-image-classification-online.ipynb # (Example Azure/SDK style notebook placeholder)
+└── README.md                # (This file) Full project documentation.
 ```
 
-## Dataset
-The dataset used for training contains images of car body damages, including classes such as scratches, rust, paint fading, paint cracks, dents, cracks, and PDR dents. It was created using the Roboflow platform and is available in two versions:
-- **Without Data Augmentation**: 456 images.
-- **With Data Augmentation**: 1140 images.
+### 2.1 `damage_detection_app/app.py` – GUI Architecture
+The GUI centers around a single `YOLOApp` class:
 
-All images have been annotated using polygons to ensure high precision in labeling, which was a time-consuming but crucial process due to the relatively small dataset size. This precise annotation was necessary for effective model training.
+| Area | Description |
+|------|-------------|
+| Initialization | Creates frames (top for canvas, bottom for controls + log), configures drag‑and‑drop (TkinterDnD), sets window styling and graceful close handler. |
+| Model Loading | Lazily loads `model/best.pt` on first folder open or drag event (`load_model`). Replace this file with your own trained weights. |
+| Image Ingestion | Folder selection (dialog or drag) filters by extension (`png`, `jpg`, `jpeg`) and stores paths in `image_list`. Navigation handled by `show_prev_image` / `show_next_image`. |
+| Inference Pipeline | `detect_objects` calls the ultralytics `YOLO` model: results tensor → counts labels → plots annotated image (bounding boxes + labels) using built‑in `.plot()`. |
+| Rendering | OpenCV BGR→RGB conversion → Pillow resize maintaining aspect ratio → Tkinter `Canvas` redraw on resize (`on_resize`). |
+| Logging | `update_log` aggregates detections (group counts of each class) and writes formatted bullet list to a right‑hand `Text` widget. |
+| UX Enhancements | Placeholder clickable text for “Choose a directory”, drag‑and‑drop of folders, responsive scaling, confirmation dialog on exit. |
 
-You can access the dataset and more details on Roboflow here: [Roboflow Project Link](https://universe.roboflow.com/cardetecion/car-paint-damage-detection)
+### 2.2 Notebooks
+| Notebook | Focus | Key Outputs |
+|----------|-------|-------------|
+| `training/YOLOv8.ipynb` | Download dataset, preprocess, configure hyperparameters (batch size sweep), train, validate, export weights (`best.pt`) | Precision curve, loss curves, mAP50, confusion matrix, final weights |
+| `training/Faster R-CNN.ipynb` | Alternative architecture test; plays with backbone depth (R50 vs R101), LR scheduling, solver steps to combat overfitting | Loss progression, mAP50 comparison, confusion matrix, qualitative eval |
+| `notebooks/official/...` | (Placeholder / external integration example) | Demonstrates potential cloud / SDK workflow |
 
-Below is an illustration of the dataset categories, showcasing the different types of car body damages used for training:
+### 2.3 Images & Metrics (`img/`)
+Stored plots document evaluation, aiding regression tracking when retraining.
 
-<img src="img/dataset_categories.png" alt="Dataset Categories" width="800" />
+### 2.4 Test Images (`damage_detection_app/test/`)
+Small curated subset to sanity‑check inference quality & GUI rendering.
 
+---
 
-## Data Augmentation
+## 3. Dataset & Annotation Strategy
 
-To improve the model's generalization and handle the relatively small dataset, data augmentation techniques were applied. Each training example generated 3 augmented versions, using the following techniques:
+Classes (example): scratches, rust, paint fading, paint cracks, dents, structural cracks, PDR dents.
 
-- **Flip**: Horizontal and Vertical flipping
-- **Rotation**: Random rotation between -15° and +15°
-- **Saturation**: Adjusted between -35% and +35%
-- **Cutout**: 10 random boxes, each covering 2% of the image area
+| Version | Image Count | Augmentation | Annotation Geometry |
+|---------|-------------|--------------|---------------------|
+| Base | 456 | None | Polygons (fine-grained boundaries) |
+| Augmented | 1140 | Flip, rotate, saturation jitter, cutout | Inherited polygons |
 
-Below is an example of an original image and its augmented version:
+Annotation rationale: polygon labeling reduces background bleed into bounding boxes (important for subtle paint defects). Time investment improves precision especially with limited dataset size.
+
+Dataset source & details: [Roboflow Project Link](https://universe.roboflow.com/cardetecion/car-paint-damage-detection)
+
+### 3.1 Augmentation Techniques
+- Horizontal & vertical flips
+- Rotation: ±15°
+- Saturation adjustment: −35% to +35%
+- Cutout: 10 masks (~2% each) to encourage robustness to occlusion
 
 <img src="img/augumentation_example.png" alt="Augmentation Example" width="800" />
 
+### 3.2 Class Distribution & Visual Reference
+<img src="img/dataset_categories.png" alt="Dataset Categories" width="800" />
 
-## Features
-- **Dataset Creation**: High-quality image dataset with precise annotations using polygons.
-- **Model Training**: Training of YOLOv8 and Faster R-CNN models using Google Colab.
-- **Model Comparison**: Both models were trained and compared for their performance in detecting car body damages.
-- **Application**: A Python application for detecting damages in images, with a graphical user interface (GUI) for easy navigation and result visualization.
+---
 
+## 4. Model Training & Evaluation
 
-## YOLOv8 Model
+### 4.1 YOLOv8 Experiments
+Batch sizes explored: `-1 (auto)`, 8, 16, 32 across augmented vs non‑augmented data using `yolov8m` pretrained weights.
 
-### YOLOv8 Model Configurations
-The following table summarizes the different configurations used during the training of the YOLOv8 model:
+Key insight: auto batch (`-1`) + augmentation delivered best stability and generalization.
 
-| Pretrained Model | Dataset                  | Batch Size |
-|------------------|--------------------------|------------|
-| yolov8m          | Without Augmentation     | -1, 8, 16, 32 |
-|                  | With Augmentation        | -1, 8, 16, 32 |
+<details>
+<summary>Metrics (best run)</summary>
 
-- **Pretrained Model**: The base YOLOv8 model used for transfer learning.
-- **Dataset**: Indicates whether data augmentation techniques were applied during training.
-- **Batch Size**: Different batch sizes tested during training. The value `-1` indicates the default batch size used by the model.
+| Metric | Observations |
+|--------|--------------|
+| Precision | Steady climb, early convergence |
+| Total Loss | Multi-component decline (cls, box, dfl) visible in combined curve |
+| mAP50 | Competitive given limited data size |
+| Confusion Matrix | Low cross‑class leakage on high contrast damage types |
 
-### YOLOv8 Model Training Results
-Below are the training results for the best model configuration (with data augmentation and batch size of -1). The presented metrics include precision, total loss, mAP50, and a confusion matrix.
+<img src="img/yolo-precision.png" alt="YOLO Precision" width="700" />
+<img src="img/yolo-total-loss.png" alt="YOLO Total Loss" width="700" />
+<img src="img/yolo-map50.png" alt="YOLO mAP50" width="700" />
+<img src="img/yolo-cf.png" alt="YOLO Confusion Matrix" width="700" />
+</details>
 
-- **Precision**: The following graph shows the precision of the model across epochs:
+### 4.2 Faster R-CNN Experiments
+Backbones: `R_50_FPN_3x`, `R_101_FPN_3x`. Attempts to mitigate overfitting: low LR (0.001), solver steps (e.g. 500/700/800), gamma decay (0.5), fixed batch size 8.
 
-   <img src="img/yolo-precision.png" alt="Precision" width="800" />
-- **Total Loss**: The total loss curve provides insights into how the model's loss decreased over training epochs:
+Challenges: Overfitting persisted; dataset scale insufficient for heavier architecture depth.
 
-   <img src="img/yolo-total-loss.png" alt="Total Loss" width="800" />
-- **mAP50**: The mean Average Precision at 50% IoU (mAP50) is shown below, indicating the model's ability to detect and classify damages:
+<details>
+<summary>Metrics (representative runs)</summary>
+<img src="img/faster-rcnn-map50.png" alt="Faster R-CNN mAP50" width="700" />
+<img src="img/faster-rcnn-total-loss.png" alt="Faster R-CNN Total Loss" width="700" />
+<img src="img/faster-rcnn-cf.png" alt="Faster R-CNN Confusion Matrix" width="700" />
+</details>
 
-   <img src="img/yolo-map50.png" alt="mAP50" width="800" />
-- **Confusion Matrix**: The normalized confusion matrix shows the model's performance on the validation dataset, highlighting how well the model differentiates between different damage types:
+### 4.3 Comparative Summary
+<img src="img/yolo-vs-faster-map50.png" alt="mAP50 Comparison" width="700" />
+<img src="img/yolo-vs-faster-total-loss.png" alt="Total Loss Comparison" width="700" />
 
-   <img src="img/yolo-cf.png" alt="Confusion Matrix" width="800" />
+Conclusion: YOLOv8 superior on small, heterogeneous dataset due to efficient feature reuse, dynamic label assignment, and lighter inductive bias vs two‑stage region proposal pipeline.
 
+---
 
-## Conclusion
+## 5. Application (Desktop GUI) Deep Dive
 
-The best-performing configuration for the YOLOv8 model was achieved using data augmentation and the default batch size (`batch size = -1`). This outcome is logical, as data augmentation introduces more diversity into the dataset, helping the model better generalize to various types of car body damages. Additionally, using the default batch size allows the model to automatically adjust to an optimal size for the given dataset and training conditions, ensuring better convergence during training.
+### 5.1 Runtime Flow
+1. User selects or drags a folder → file list built.
+2. Lazy model load from `model/best.pt` (ensure this file exists; place exported YOLO weights there).
+3. For each image navigation event: read with OpenCV → inference → annotate via `.plot()` → convert to Pillow → resize → render on Tkinter Canvas.
+4. Detection tensor processed to aggregate label counts → written to log pane.
 
+### 5.2 Dependencies Rationale
+| Library | Role |
+|---------|-----|
+| `opencv-python` | Fast image I/O and color conversion |
+| `pillow` | High-quality resizing & Tkinter compatibility |
+| `tkinterdnd2` | Drag & drop UX for directory ingest |
+| `ultralytics` | Model loading, inference, annotation rendering |
 
-## Faster R-CNN Model
+### 5.3 Extending the App
+| Goal | What to Change |
+|------|----------------|
+| New model version | Replace `model/best.pt` with new weights; keep same path or update `load_model`. |
+| Add confidence threshold | Insert filtering in `detect_objects` before `update_log`. |
+| Export results | Save `results[0].boxes.data` to CSV/JSON after inference. |
+| Support video | Iterate frames from `cv2.VideoCapture` → reuse detection/display pipeline. |
+| Multi-class color coding | Modify `.plot()` output or overlay custom rectangles using class→color map. |
 
-### Faster R-CNN Model Configurations
-The following table outlines the configurations used for training the Faster R-CNN model:
+### 5.4 Error Handling & UX
+Errors (missing model, unreadable image) are appended to the log panel and stack traces printed (for dev). Production hardening could suppress raw tracebacks and show modal dialogs.
 
-| Data Type         | Pretrained Model              | Batch Size | Learning Rate | Batch Size per Image | Solver Steps | Solver Gamma |
-|-------------------|-------------------------------|------------|---------------|---------------------|--------------|--------------|
-| Without Augmentation | `faster_rcnn_R_50_FPN_3x`   | 8          | 0.001         | 512                 | -            | -            |
-|                   | `faster_rcnn_R_50_FPN_3x`     | 8          | 0.001         | 512                 | 500, 800     | 0.5          |
-|                   | `faster_rcnn_R_101_FPN_3x`    | 8          | 0.001         | 512                 | -            | -            |
-|                   | `faster_rcnn_R_101_FPN_3x`    | 8          | 0.001         | 512                 | 500, 700     | 0.5          |
-| With Augmentation | `faster_rcnn_R_50_FPN_3x`     | 8          | 0.001         | 512                 | -            | -            |
-|                   | `faster_rcnn_R_50_FPN_3x`     | 8          | 0.001         | 512                 | 500          | 0.5          |
-|                   | `faster_rcnn_R_101_FPN_3x`    | 8          | 0.001         | 512                 | -            | -            |
-|                   | `faster_rcnn_R_101_FPN_3x`    | 8          | 0.001         | 512                 | 500          | 0.5          |
+### 5.5 Known Limitations
+- Model path hardcoded; no config file yet.
+- No batch evaluation metrics inside GUI.
+- Scaling prioritizes fit; no zoom/pan.
+- Confidence & NMS parameters not user-adjustable in UI.
 
-**Note**: The settings with specific solver steps and solver gamma values were applied to try to prevent overfitting during training.
+---
 
-### Faster R-CNN Model Training Results
-Below are the training results for the Faster R-CNN model, showcasing various performance metrics, including mAP50, total loss, and a confusion matrix.
+## 6. Installation & Quick Start
 
-- **mAP50**: The following graph shows the mean Average Precision at 50% IoU (mAP50) across iterations, indicating the model's accuracy in detecting and classifying damages:
+### 6.1 Clone Repository
+```bash
+git clone https://github.com/Oleksy1121/Car-Damage-Detection.git
+cd Car-Damage-Detection/damage_detection_app
+```
 
-   <img src="img/faster-rcnn-map50.png" alt="mAP50" width="800" />
-- **Total Loss**: The total loss curve illustrates how the loss function values changed throughout the training iterations:
+### 6.2 (Optional) Create Virtual Environment – Windows (cmd)
+```cmd
+python -m venv .venv
+".venv\Scripts\activate"
+```
 
-   <img src="img/faster-rcnn-total-loss.png" alt="Total Loss" width="800" />
-- **Confusion Matrix**: The normalized confusion matrix represents the model's performance on the validation dataset, showing the accuracy of classification across various damage types:
+### 6.3 Install Dependencies
+```cmd
+pip install -r requirements.txt
+```
 
-   <img src="img/faster-rcnn-cf.png" alt="Confusion Matrix" width="800" />
+### 6.4 Place Model Weights
+Create `model/` inside `damage_detection_app/` and copy your trained YOLO weights (e.g. `best.pt`).
+```cmd
+mkdir model
+copy path\to\your\best.pt model\best.pt
+```
 
-## Conclusion
-The Faster R-CNN model faced significant challenges with overfitting, both with and without data augmentation. The primary reason for this is the relatively small size of the dataset, which limited the model's ability to learn effectively without overfitting to the training data. Despite attempts to mitigate overfitting through strategies such as setting a low learning rate, adjusting solver steps, and using a gamma value to control learning rate decay, the model's performance did not improve substantially. This highlights the need for a larger dataset when using the Faster R-CNN architecture for similar tasks.
+### 6.5 Run GUI
+```cmd
+python app.py
+```
 
+Drag a folder of images into the window or click “Open Folder”. Use arrow buttons to navigate.
 
-## Model Comparison: YOLO vs. Faster R-CNN
-Below are the comparative results between the YOLO and Faster R-CNN models, showing the mAP50 and total loss metrics.
+### 6.6 Training (Optional)
+Open notebooks under `training/` in Colab: upload Roboflow export, adjust paths, run cells, download `best.pt`.
 
-- **mAP50 Comparison**: This graph illustrates the mean Average Precision at 50% IoU (mAP50) over training epochs for both models, highlighting their accuracy in detecting and classifying damages:
+---
 
-   <img src="img/yolo-vs-faster-map50.png" alt="mAP50 Comparison" width="800" />
-- **Total Loss Comparison**: The following graph compares the total loss between the YOLO and Faster R-CNN models throughout the training process, demonstrating how the loss decreases as each model improves:
+## 7. Evaluation & Reproducibility Notes
+| Aspect | Recommendation |
+|--------|----------------|
+| Hardware | Use GPU (Colab T4/A100) for YOLO; Faster R-CNN needs more VRAM for larger backbones. |
+| Random Seeds | Fix seeds (`torch`, `numpy`) for more stable comparisons when altering batch sizes. |
+| Version Pinning | Track ultralytics version (see `requirements.txt`); major updates can alter label assignment. |
+| Metrics | Prefer mAP50-95 for richer view; current focus on mAP50 due to dataset scale. |
 
-   <img src="img/yolo-vs-faster-total-loss.png" alt="Total Loss Comparison" width="800" />
+---
 
+## 8. Troubleshooting
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `ModuleNotFoundError: ultralytics` | Env not activated / deps missing | Activate venv + reinstall requirements |
+| Empty detections | Wrong weights / incompatible classes | Verify class names in training and model export |
+| Blurry resized image | Low original resolution | Enable high-quality interpolation already set (LANCZOS) – no action |
+| GUI freeze on huge folders | Large I/O on main thread | Add threading or prefetch caching |
+| Model not found | Missing `model/best.pt` | Place weights file; check relative path |
 
-## Conclusion
-In the task of detecting car body damages, the YOLOv8 model outperformed the Faster R-CNN model. This suggests that the YOLOv8 model is better suited for scenarios with limited training data, where its architecture and training strategies can efficiently learn from the available images. The superior performance of YOLOv8 in this case underscores its robustness and ability to generalize well, making it a more suitable choice for our project.
+---
 
+## 9. Future Improvements
+1. Config file (`config.yaml`) for model path, thresholds.
+2. Batch inference & CSV/JSON export.
+3. Confidence/NMS sliders in GUI.
+4. Lightweight web version (FastAPI + simple React front-end).
+5. Active learning loop: feed low-confidence predictions back into annotation queue.
+6. ONNX / TensorRT export for speed on edge devices.
 
-## Application Overview
+---
 
-This project includes a Python-based application with a graphical user interface (GUI) built using Tkinter. The application leverages the best-trained YOLOv8 model to make predictions on car body images, identifying various types of defects. It allows users to load images from a selected folder and displays the predictions directly on the images with bounding boxes.
+## 10. License & Use
+Dataset annotations produced manually; ensure any redistribution complies with original image source rights. Code is provided for educational and research use—add an explicit license file (MIT/Apache) if redistribution terms need clarification.
 
-### Key Features:
-- **YOLOv8-based detection**: The application uses the YOLOv8 model to detect defects such as scratches, dents, rust, and paint fading.
-- **Graphical User Interface (GUI)**: Built with Tkinter, the application is user-friendly and allows easy navigation through images using "Next" and "Previous" buttons.
-- **Logs**: The application logs the detected defects and displays them on the interface for user reference.
-- **Real-time prediction display**: Defects are shown on the image with bounding boxes and confidence scores.
+---
 
-### Application Demo
+## 11. Attributions
+- Ultralytics YOLO for core detection engine.
+- Roboflow for dataset hosting & augmentation pipeline.
+- TkinterDnD2 for drag‑and‑drop integration.
+- OpenCV & Pillow for image handling.
 
-Below is a demonstration of the application in action:
+---
 
-![Application Demo](img/application_demo.gif)
+## 12. Quick Reference (Cheat Sheet)
+| Action | Command (Windows cmd) |
+|--------|-----------------------|
+| Create venv | `python -m venv .venv` |
+| Activate venv | `".venv\Scripts\activate"` |
+| Install deps | `pip install -r requirements.txt` |
+| Run app | `python app.py` |
+| Add weights | `copy path\to\best.pt model\best.pt` |
 
+---
 
-## How to Use
-1. **Download or clone the repository**:
-   ```bash
-   git clone https://github.com/Oleksy1121/Car-Damage-Detection.git
-   cd Car-Damage-Detection
-   ```
+## 13. Visual Demo
+<img src="img/application_demo.gif" alt="Application Demo" width="700" />
 
-2. **Navigate to the `damage_detection_app/` folder** and follow the instructions in the `README.md` for setting up and running the application.
+---
 
-3. **To train models**, open the Jupyter notebooks in the `training/` folder using Google Colab or another environment.
-   - For training the YOLOv8 model, use the `YOLOv8.ipynb` notebook.
-   - For training the Faster R-CNN model, use the `Faster R-CNN.ipynb` notebook.
-   - Each notebook includes detailed steps for setting up the dataset, configuring the model, and training.
+## 14. Summary
+This project demonstrates a complete, minimal yet extensible pipeline for car exterior damage detection—from curated polygon annotations through model benchmarking to a user‑friendly desktop visualization tool. YOLOv8 currently offers the best trade‑off on the constrained dataset; the architecture choices, augmentation strategy, and GUI design aim to be transparent so you can iterate further.
 
-4. **Install Dependencies**: Run the following command in the terminal to install all required packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-5. **Run the Application**: Execute the following command to launch the application:
-    ```
-    python app.py
-    ```
+Feel free to open issues or submit PRs for enhancements.

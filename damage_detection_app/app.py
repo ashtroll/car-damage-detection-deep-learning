@@ -99,7 +99,9 @@ class YOLOApp:
     def load_model(self):
         """Ładuje model YOLO."""
         try:
-            yolo_model_path = os.path.join(os.curdir, 'model', 'best.pt')
+            # Get the directory where this script is located
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            yolo_model_path = os.path.join(script_dir, 'model', 'best.pt')
             self.model = YOLO(yolo_model_path)
         except Exception as e:
             self.text_log.insert(END, f"Error loading model: {str(e)}\n")

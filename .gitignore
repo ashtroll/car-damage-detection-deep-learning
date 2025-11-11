@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+*.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Model weights and training outputs
+*.pt
+*.pth
+*.weights
+runs/
+wandb/
+weights/
+checkpoints/
+
+# Dataset files (too large for git)
+*.zip
+*.tar.gz
+*.rar
+data/images/
+data/train/
+data/valid/
+data/test/
+datasets/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# PyTorch and TensorFlow
+*.h5
+*.pb
+saved_model/
+
+# Python testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Environment variables
+.env
+.env.local
+
+# Exceptions: Keep small sample/test images
+!damage_detection_app/test/*.jpg
+!damage_detection_app/test/*.png
+!img/*.jpg
+!img/*.png
+!img/*.gif
